@@ -1,0 +1,19 @@
+baseURL = 'https://kestryix.github.io/'
+languageCode = 'en-us'
+theme = 'archie'
+title = 'kestryix'
+
+[params]
+	mode="auto"
+	useCDN=false
+	subtitle = "mini adventures with me"
+
+[[params.social]]
+name = "GitHub"
+icon = "github"
+url = "https://github.com/kestryix"
+
+[[params.social]]
+name = "Twitter"
+icon = "twitter"
+url = "https://twitter.com/kestryix/"

@@ -6,8 +6,15 @@
     <description>Recent content on kestryix</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Mon, 18 Dec 2023 22:00:00 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 09 Sep 2024 22:00:00 +0800</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>What this is</title>
+      <link>http://localhost:1313/sysadmin/what-is-this/</link>
+      <pubDate>Mon, 09 Sep 2024 22:00:00 +0800</pubDate>
+      <guid>http://localhost:1313/sysadmin/what-is-this/</guid>
+      <description>&lt;p&gt;Hello! I see you have found my sysadmin dump&lt;/p&gt;&#xA;&lt;p&gt;Most of what you would find here are probably my documentation/configurations tested on Debian 10/11 and Windows Server 2019 from maybe 4 to 5 years ago&amp;hellip; Maybe the occasional cisco config dump :D&lt;/p&gt;&#xA;&lt;p&gt;I recorded most of these for my own learning when I was exploring setting up&#xA;networks, services and service integration. I hope to be able to work on these again some day!&lt;/p&gt;</description>
+    </item>
     <item>
       <title>WGMY 2023</title>
       <link>http://localhost:1313/ctf/wgmy23/</link>

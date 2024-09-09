@@ -32,3 +32,13 @@ weight = 2
 name = "Sysadmin"
 url = "/sysadmin"
 weight = 3
+
+[[menu.main]]
+name = "About"
+url = "/about"
+weight = 4
+
+[[menu.main]]
+name = "Tags"
+url = "/tags"
+weight = 5

@@ -24,11 +24,11 @@ url = "/"
 weight = 1
 
 [[menu.main]]
-name = "Posts"
-url = "/posts"
+name = "CTFs"
+url = "/ctf"
 weight = 2
 
 [[menu.main]]
-name = "CTFs"
-url = "/ctf"
+name = "Sysadmin"
+url = "/sysadmin"
 weight = 3

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>kestryix</title>
-    <link>http://localhost:1313/</link>
-    <description>Recent content on kestryix</description>
+    <title>Ctfs on kestryix</title>
+    <link>http://localhost:1313/ctf/</link>
+    <description>Recent content in Ctfs on kestryix</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Mon, 18 Dec 2023 22:00:00 +0800</lastBuildDate>
-    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/ctf/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>WGMY 2023</title>
       <link>http://localhost:1313/ctf/wgmy23/</link>

